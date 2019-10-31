@@ -1,5 +1,6 @@
 """Class with batch-based sampling."""
 
+from garage.experiment import deterministic
 from garage.sampler import parallel_sampler
 from garage.sampler.base import BaseSampler
 from garage.sampler.utils import truncate_paths
@@ -11,10 +12,17 @@ class BatchSampler(BaseSampler):
     Args:
         algo (garage.np.algos.RLAlgorithm): The algorithm.
         env (gym.Env): The environment.
+        max_cpus (int): The maximum number of parallel sampler workers.
 
     """
 
-    def __init__(self, algo, env):
+    def __init__(self, algo, env, max_cpus=1):
+        parallel_sampler.initialize(max_cpus)
+
+        seed = deterministic.get_seed()
+        if seed is not None:
+            parallel_sampler.set_seed(seed)
+
         super().__init__(algo, env)
 
     def start_worker(self):
@@ -28,7 +36,18 @@ class BatchSampler(BaseSampler):
         parallel_sampler.terminate_task(scope=self.algo.scope)
 
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
-        """Obtain samples."""
+        # pylint: disable=arguments-differ
+        """Obtain samples.
+
+        Args:
+            itr (int): number of iteration
+            batch_size (int): number of batch size
+            whole_paths (bool): whether to use whole path or truncated
+
+        Returns:
+            list[dict]: a list of paths.
+
+        """
         if not batch_size:
             batch_size = self.algo.max_path_length
 

@@ -20,17 +20,32 @@ import psutil
 
 from garage.experiment import deterministic, SnapshotConfig
 import garage.plotter
-from garage.sampler import parallel_sampler
 import garage.tf.plotter
 
 
 def is_iterable(obj):
-    """Return if instance is iterable."""
+    """Determine if object is iterable.
+
+    Args:
+        obj (object): Object.
+
+    Returns:
+        bool: return boolean value if instance is iterable.
+
+    """
     return isinstance(obj, str) or getattr(obj, '__iter__', False)
 
 
-def run_experiment(argv):
-    """Run experiment."""
+def run_experiment(argv):  # pylint: disable=too-many-statements
+    """Run experiment.
+
+    Args:
+        argv (sys.argv): command-line arguments passed to the script.
+
+    Raises:
+        BaseException: if there is anything wrong with the method call.
+
+    """
     now = datetime.datetime.now(dateutil.tz.tzlocal())
 
     # avoid name clashes when running distributed jobs
@@ -39,12 +54,6 @@ def run_experiment(argv):
 
     default_exp_name = 'experiment_%s_%s' % (timestamp, rand_id)
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--n_parallel',
-        type=int,
-        default=1,
-        help=('Number of parallel workers to perform rollouts. '
-              "0 => don't start any workers"))
     parser.add_argument('--exp_name',
                         type=str,
                         default=default_exp_name,
@@ -121,11 +130,6 @@ def run_experiment(argv):
     if args.seed is not None:
         deterministic.set_seed(args.seed)
 
-    if args.n_parallel > 0:
-        parallel_sampler.initialize(n_parallel=args.n_parallel)
-        if args.seed is not None:
-            parallel_sampler.set_seed(args.seed)
-
     if not args.plot:
         garage.plotter.Plotter.disable()
         garage.tf.plotter.Plotter.disable()
@@ -167,8 +171,6 @@ def run_experiment(argv):
     except BaseException:
         children = garage.plotter.Plotter.get_plotters()
         children += garage.tf.plotter.Plotter.get_plotters()
-        if args.n_parallel > 0:
-            children += [parallel_sampler]
         child_proc_shutdown(children)
         raise
 
@@ -177,7 +179,12 @@ def run_experiment(argv):
 
 
 def child_proc_shutdown(children):
-    """Shut down children processes."""
+    """Shut down children processes.
+
+    Args:
+        children (list[Plotter]): list of plotters.
+
+    """
     run_exp_proc = psutil.Process()
     alive = run_exp_proc.children(recursive=True)
     for proc in alive:
@@ -212,7 +219,13 @@ def child_proc_shutdown(children):
 
 
 def log_parameters(log_file, args):
-    """Log parameters to file."""
+    """Log parameters to file.
+
+    Args:
+        log_file (str): Log file.
+        args (dict): A variable number of arguments.
+
+    """
     log_params = {}
     for param_name, param_value in args.__dict__.items():
         log_params[param_name] = param_value
@@ -224,7 +237,13 @@ def log_parameters(log_file, args):
 
 
 def dump_variant(log_file, variant_data):
-    """Dump the variant file."""
+    """Dump the variant file.
+
+    Args:
+        log_file (str): Log file.
+        variant_data (object): Variant data.
+
+    """
     pathlib.Path(os.path.dirname(log_file)).mkdir(parents=True, exist_ok=True)
     with open(log_file, 'w') as f:
         json.dump(variant_data, f, indent=2, sort_keys=True, cls=LogEncoder)
@@ -234,8 +253,16 @@ class LogEncoder(json.JSONEncoder):
     """Encoder to be used as cls in json.dump."""
 
     def default(self, o):  # pylint: disable=method-hidden
-        """Perform JSON encoding."""
-        if isinstance(o, type):
+        """Perform JSON encoding.
+
+        Args:
+            o (object): Object to perform JSON encoding.
+
+        Returns:
+            JSONEncoder: JSON encoder.
+
+        """
+        if isinstance(o, type):  # pylint: disable=no-else-return
             return {'$class': o.__module__ + '.' + o.__name__}
         elif isinstance(o, enum.Enum):
             return {

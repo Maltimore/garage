@@ -6,6 +6,7 @@ from dowel import logger, tabular
 
 from garage.experiment.deterministic import get_seed, set_seed
 from garage.experiment.snapshotter import Snapshotter
+from garage.sampler import parallel_sampler
 
 
 class ExperimentStats:
@@ -99,12 +100,10 @@ class LocalRunner:
         |         ...)
         | runner.setup(algo, env)
         | runner.train(n_epochs=100, batch_size=4000)
-
         | # to resume immediately.
         | runner = LocalRunner()
         | runner.restore(resume_from_dir)
         | runner.resume()
-
         | # to resume with modified training arguments.
         | runner = LocalRunner()
         | runner.restore(resume_from_dir)
@@ -117,10 +116,12 @@ class LocalRunner:
                                         snapshot_config.snapshot_mode,
                                         snapshot_config.snapshot_gap)
 
-        if max_cpus > 1:
-            # pylint: disable=import-outside-toplevel
-            from garage.sampler import singleton_pool
-            singleton_pool.initialize(max_cpus)
+        parallel_sampler.initialize(max_cpus)
+
+        seed = get_seed()
+        if seed is not None:
+            parallel_sampler.set_seed(seed)
+
         self._has_setup = False
         self._plot = False
 
@@ -357,7 +358,6 @@ class LocalRunner:
         This function returns a magic generator. When iterated through, this
         generator automatically performs services such as snapshotting and log
         management. It is used inside train() in each algorithm.
-
         The generator initializes two variables: `self.step_itr` and
         `self.step_path`. To use the generator, these two have to be
         updated manually in each epoch, as the example shows below.
@@ -404,7 +404,6 @@ class LocalRunner:
         """Resume from restored experiment.
 
         This method provides the same interface as train().
-
         If not specified, an argument will default to the
         saved arguments from the last call to train().
 

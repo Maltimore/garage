@@ -1,14 +1,17 @@
+"""Base class of Sampler."""
 import abc
 
 
 class Sampler(abc.ABC):
+    """Sampler interface."""
+
     @abc.abstractmethod
     def start_worker(self):
-        """Initialize the sampler,
+        """Initialize the sampler.
 
         e.g. launching parallel workers if necessary.
+
         """
-        pass
 
     @abc.abstractmethod
     def obtain_samples(self, itr):
@@ -21,15 +24,14 @@ class Sampler(abc.ABC):
             list[dict]: A list of paths.
 
         """
-        pass
 
     @abc.abstractmethod
     def shutdown_worker(self):
         """Terminate workers if necessary."""
-        pass
 
 
 class BaseSampler(Sampler):
+    # pylint: disable=abstract-method
     """Base class for sampler.
 
     Args:
