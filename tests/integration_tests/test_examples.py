@@ -15,6 +15,12 @@ NON_ALGO_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'step_dm_control_env.py',
 ]
 
+LONG_RUNNING_EXAMPLES = [
+    EXAMPLES_ROOT_DIR / 'tf/ppo_memorize_digits.py',
+    EXAMPLES_ROOT_DIR / 'tf/dqn_pong.py',
+    EXAMPLES_ROOT_DIR / 'tf/trpo_cubecrash.py',
+]
+
 
 def enumerate_algo_examples():
     """Return a list of paths for all algo examples
@@ -23,11 +29,13 @@ def enumerate_algo_examples():
         List[str]: list of path strings
 
     """
+    exclude = NON_ALGO_EXAMPLES + LONG_RUNNING_EXAMPLES
     all_examples = EXAMPLES_ROOT_DIR.glob('**/*.py')
-    return [str(e) for e in all_examples if e not in NON_ALGO_EXAMPLES]
+    return [str(e) for e in all_examples if e not in exclude]
 
 
 @pytest.mark.no_cover
+@pytest.mark.timeout(70)
 @pytest.mark.parametrize('filepath', enumerate_algo_examples())
 def test_algo_examples(filepath):
     """Test algo examples.
@@ -45,6 +53,7 @@ def test_algo_examples(filepath):
 
 
 @pytest.mark.no_cover
+@pytest.mark.timeout(10)
 def test_step_env():
     """Test step_env.py."""
     assert subprocess.run(
@@ -53,6 +62,7 @@ def test_step_env():
 
 
 @pytest.mark.no_cover
+@pytest.mark.timeout(20)
 def test_step_dm_control_env():
     """Test step_dm_control_env.py."""
     assert subprocess.run(
