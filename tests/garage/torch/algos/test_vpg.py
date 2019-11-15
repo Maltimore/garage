@@ -1,3 +1,4 @@
+"""This script creates a test that fails when VPG performance is too low."""
 import gym
 import pytest
 import torch
@@ -29,12 +30,15 @@ INVALID_ENTROPY_CONFIG = [
 
 
 class TestVPG:
+    """Test class for VPG."""
 
     @classmethod
     def setup_class(cls):
-        deterministic.set_seed(0)
+        """Setup method which is called once before all class tests."""
+        deterministic.set_seed(0, pytorch=True)
 
     def setup_method(self):
+        """Setup method which is called before every test."""
         self._env = GarageEnv(gym.make('InvertedDoublePendulum-v2'))
         self._runner = LocalRunner(snapshot_config)
 
@@ -53,6 +57,7 @@ class TestVPG:
         }
 
     def teardown_method(self):
+        """Teardown method which is called after every test."""
         self._env.close()
 
     def test_vpg_no_entropy(self):
@@ -87,6 +92,7 @@ class TestVPG:
 
     @pytest.mark.parametrize('algo_param, error, msg', INVALID_ENTROPY_CONFIG)
     def test_invalid_entropy_config(self, algo_param, error, msg):
+        """Test VPG with invalid entropy config."""
         self._params.update(algo_param)
         with pytest.raises(error, match=msg):
             VPG(**self._params)

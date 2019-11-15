@@ -31,7 +31,7 @@ class TestTRPO:
 
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
-        deterministic.set_seed(0)
+        deterministic.set_seed(0, pytorch=True)
 
         runner = LocalRunner(snapshot_config)
         algo = TRPO(env_spec=self.env.spec,

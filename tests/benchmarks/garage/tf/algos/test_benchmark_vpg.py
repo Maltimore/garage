@@ -133,7 +133,7 @@ def run_garage_pytorch(env, seed, log_dir):
     """
     env = TfEnv(normalize(env))
 
-    deterministic.set_seed(seed)
+    deterministic.set_seed(seed, pytorch=True)
 
     runner = LocalRunner(snapshot_config)
 

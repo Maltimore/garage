@@ -2,26 +2,36 @@
 import random
 import sys
 
+from dowel import logger
 import numpy as np
 
 seed_ = None
 
 
-def set_seed(seed):
+def set_seed(seed, pytorch=False):
     """Set the process-wide random seed.
 
     Args:
         seed (int): A positive integer
+        pytorch (bool): Whether to set seed for PyTorch.
 
     """
     seed %= 4294967294
+    # pylint: disable=global-statement
     global seed_
     seed_ = seed
     random.seed(seed)
     np.random.seed(seed)
     if 'tensorflow' in sys.modules:
-        import tensorflow as tf
+        import tensorflow as tf  # pylint: disable=import-outside-toplevel
         tf.compat.v1.set_random_seed(seed)
+    if 'torch' in sys.modules and pytorch:
+        logger.log('Enabeling deterministic mode in pytorch mode can have a \
+            performance impact.')
+        import torch  # pylint: disable=import-outside-toplevel
+        torch.manual_seed(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
 def get_seed():
