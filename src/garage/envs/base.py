@@ -165,6 +165,16 @@ class GarageEnv(gym.Wrapper):
             return state
         return self.__dict__
 
+    def __setstate__(self, state):
+        """See `Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state of this object.
+
+        """
+        obj = type(self)(state['_env'], state['_env_name'])
+        self.__dict__.update(obj.__dict__)
+
 
 def Step(observation, reward, done, **kwargs):  # noqa: N802
     """Create a namedtuple from the results of environment.step(action).
