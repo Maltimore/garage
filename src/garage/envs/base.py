@@ -172,8 +172,7 @@ class GarageEnv(gym.Wrapper):
             state (dict): Unpickled state of this object.
 
         """
-        obj = type(self)(state['_env'], state['_env_name'])
-        self.__dict__.update(obj.__dict__)
+        self.__init__(state['_env'], state['_env_name'])
 
 
 def Step(observation, reward, done, **kwargs):  # noqa: N802
